@@ -1,0 +1,238 @@
+-- Modern Limbo Hub Key System (Fixed Text Overflow & Auto-Save 24h hidden)
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+
+-- Kiểm tra xem đã lưu key và còn hạn trong vòng 24 giờ qua chưa (ẩn hoàn toàn)
+local function checkSavedKey()
+	if readfile and writefile and isfile then
+		if isfile("LimboHub_KeyData.json") then
+			local success, data = pcall(function()
+				return game:GetService("HttpService"):JSONDecode(readfile("LimboHub_KeyData.json"))
+			end)
+			if success and data and data.timestamp then
+				-- 86400 giây = 24 giờ
+				if os.time() - data.timestamp < 86400 then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+-- Nếu đã lưu key hợp lệ trong 24h, tự động load thẳng script chính luôn mà không hiện menu
+if checkSavedKey() then
+	loadstring(game:HttpGet("https://limbohub.my.id/loader.lua"))()
+	return
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local UIStroke = Instance.new("UIStroke")
+local Title = Instance.new("TextLabel")
+local Subtitle = Instance.new("TextLabel")
+local TextBox = Instance.new("TextBox")
+local TextBoxCorner = Instance.new("UICorner")
+local TextBoxStroke = Instance.new("UIStroke")
+
+local ButtonHolder = Instance.new("Frame")
+local SubmitBtn = Instance.new("TextButton")
+local BtnCorner = Instance.new("UICorner")
+local GetKeyBtn = Instance.new("TextButton")
+local GetKeyCorner = Instance.new("UICorner")
+local StatusLabel = Instance.new("TextLabel")
+
+-- Setup ScreenGui
+ScreenGui.Name = "LimboHubKeySystem"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Main Container
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -135)
+MainFrame.Size = UDim2.new(0, 400, 0, 270)
+
+UICorner.Parent = MainFrame
+UICorner.CornerRadius = UDim.new(0, 14)
+
+UIStroke.Parent = MainFrame
+UIStroke.Color = Color3.fromRGB(40, 40, 40)
+UIStroke.Thickness = 1.5
+
+-- Premium Title Styling
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 0, 0.08, 0)
+Title.Size = UDim2.new(1, 0, 0, 32)
+Title.Font = Enum.Font.GothamBlack
+Title.Text = "LIMBO HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 24
+Title.TextWrapped = true
+
+-- Subtitle
+Subtitle.Name = "Subtitle"
+Subtitle.Parent = MainFrame
+Subtitle.BackgroundTransparency = 1
+Subtitle.Position = UDim2.new(0, 0, 0.23, 0)
+Subtitle.Size = UDim2.new(1, 0, 0, 20)
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.Text = "Secure Authentication System"
+Subtitle.TextColor3 = Color3.fromRGB(130, 130, 130)
+Subtitle.TextSize = 13
+
+-- Textbox (Key Input - Đã fix tràn chữ dài)
+TextBox.Name = "KeyBox"
+TextBox.Parent = MainFrame
+TextBox.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+TextBox.Position = UDim2.new(0.08, 0, 0.38, 0)
+TextBox.Size = UDim2.new(0.84, 0, 0, 46)
+TextBox.Font = Enum.Font.GothamMedium
+TextBox.PlaceholderText = "Enter your key here..."
+TextBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(240, 240, 240)
+TextBox.TextSize = 13
+TextBox.ClearTextOnFocus = false
+TextBox.TextXAlignment = Enum.TextXAlignment.Left -- Căn trái giúp nhập key dài không bị lệch góc nhìn
+TextBox.ClipsDescendants = true -- Ẩn phần chữ thừa vượt quá khung một cách mượt mà
+
+TextBoxCorner.Parent = TextBox
+TextBoxCorner.CornerRadius = UDim.new(0, 10)
+
+TextBoxStroke.Parent = TextBox
+TextBoxStroke.Color = Color3.fromRGB(45, 45, 45)
+TextBoxStroke.Thickness = 1
+
+-- Button Layout Container
+ButtonHolder.Name = "ButtonHolder"
+ButtonHolder.Parent = MainFrame
+ButtonHolder.BackgroundTransparency = 1
+ButtonHolder.Position = UDim2.new(0.08, 0, 0.65, 0)
+ButtonHolder.Size = UDim2.new(0.84, 0, 0, 45)
+
+-- Check Key Button
+SubmitBtn.Name = "SubmitBtn"
+SubmitBtn.Parent = ButtonHolder
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(235, 235, 235)
+SubmitBtn.Position = UDim2.new(0, 0, 0, 0)
+SubmitBtn.Size = UDim2.new(0.48, 0, 1, 0)
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Text = "CHECK KEY"
+SubmitBtn.TextColor3 = Color3.fromRGB(16, 16, 16)
+SubmitBtn.TextSize = 13
+
+BtnCorner.Parent = SubmitBtn
+BtnCorner.CornerRadius = UDim.new(0, 10)
+
+-- Get Key Button
+GetKeyBtn.Name = "GetKeyBtn"
+GetKeyBtn.Parent = ButtonHolder
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+GetKeyBtn.Position = UDim2.new(0.52, 0, 0, 0)
+GetKeyBtn.Size = UDim2.new(0.48, 0, 1, 0)
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.Text = "GET KEY"
+GetKeyBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+GetKeyBtn.TextSize = 13
+
+GetKeyCorner.Parent = GetKeyBtn
+GetKeyCorner.CornerRadius = UDim.new(0, 10)
+
+-- Status / Error Label
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0.08, 0, 0.86, 0)
+StatusLabel.Size = UDim2.new(0.84, 0, 0, 20)
+StatusLabel.Font = Enum.Font.GothamMedium
+StatusLabel.Text = ""
+StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+StatusLabel.TextSize = 12
+
+-- Hover Effects
+SubmitBtn.MouseEnter:Connect(function()
+	TweenService:Create(SubmitBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+end)
+SubmitBtn.MouseLeave:Connect(function()
+	TweenService:Create(SubmitBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(235, 235, 235)}):Play()
+end)
+
+GetKeyBtn.MouseEnter:Connect(function()
+	TweenService:Create(GetKeyBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+end)
+GetKeyBtn.MouseLeave:Connect(function()
+	TweenService:Create(GetKeyBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35), TextColor3 = Color3.fromRGB(200, 200, 200)}):Play()
+end)
+
+-- Smooth Shake & Clear Animation
+local function playErrorAnimation()
+	local originalPos = UDim2.new(0.5, -200, 0.5, -135)
+	local intensity = 8
+	
+	-- Shake motion
+	for i = 1, 3 do
+		TweenService:Create(MainFrame, TweenInfo.new(0.04), {Position = originalPos + UDim2.new(0, intensity, 0, 0)}):Play()
+		task.wait(0.04)
+		TweenService:Create(MainFrame, TweenInfo.new(0.04), {Position = originalPos + UDim2.new(0, -intensity, 0, 0)}):Play()
+		task.wait(0.04)
+	end
+	TweenService:Create(MainFrame, TweenInfo.new(0.04), {Position = originalPos}):Play()
+
+	-- Smooth text clearing (mờ dần và xóa chữ)
+	local fadeTween = TweenService:Create(TextBox, TweenInfo.new(0.15), {TextTransparency = 1, PlaceholderColor3 = Color3.fromRGB(255, 80, 80)})
+	fadeTween:Play()
+	fadeTween.Completed:Wait()
+	
+	TextBox.Text = ""
+	TextBox.TextTransparency = 0
+	TextBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+end
+
+-- Get Key Functionality
+GetKeyBtn.MouseButton1Click:Connect(function()
+	local linkKey = "https://link4m.net/nCi69P"
+	if setclipboard then
+		setclipboard(linkKey)
+		StatusLabel.TextColor3 = Color3.fromRGB(80, 200, 255)
+		StatusLabel.Text = "Get Key link copied to clipboard!"
+	else
+		StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
+		StatusLabel.Text = "Visit link4m.net/nCi69P to get key."
+	end
+end)
+
+-- Key Validation Logic & Save State 24h
+SubmitBtn.MouseButton1Click:Connect(function()
+	local enteredKey = TextBox.Text
+	local correctKey = "LimboHubKeyjakklwowiskBalaowkejenwkBdbalqpekenwnBskwowi"
+	
+	if enteredKey == correctKey then
+		StatusLabel.TextColor3 = Color3.fromRGB(80, 255, 120)
+		StatusLabel.Text = "Key Verified! Loading system..."
+		
+		-- Lưu lại thời điểm nhập đúng để tự động bỏ qua trong 24h tới
+		if writefile then
+			pcall(function()
+				local data = { timestamp = os.time() }
+				writefile("LimboHub_KeyData.json", game:GetService("HttpService"):JSONEncode(data))
+			end)
+		end
+		
+		task.wait(0.8)
+		ScreenGui:Destroy()
+		
+		-- Load original script
+		loadstring(game:HttpGet("https://limbohub.my.id/loader.lua"))()
+	else
+		StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+		StatusLabel.Text = "Invalid Key! Please try again."
+		
+		-- Trigger smooth shake and text reset
+		task.spawn(playErrorAnimation)
+	end
+end)
